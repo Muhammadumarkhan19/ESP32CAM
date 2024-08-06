@@ -31,8 +31,8 @@
 #include "esp_http_server.h"
 
 // Replace with your netwoFreeWiFirk credentials
-const char* ssid = "Aptech-Marketing";
-const char* password = "@ptech-marketing";
+const char* ssid = "ABCD"; // ENTER YOUR WIFI NAME!
+const char* password = "ABCD1123"; //ENTER YOUR PASSWORD! 
 
 typedef struct {
         httpd_req_t *req;
