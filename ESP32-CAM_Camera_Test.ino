@@ -30,7 +30,7 @@
 #include "soc/rtc_cntl_reg.h"  //--> disable brownout problems
 #include "esp_http_server.h"
 
-// Replace with your netwoFreeWiFirk credentials
+
 const char* ssid = "ABCD"; // ENTER YOUR WIFI NAME!
 const char* password = "ABCD1123"; //ENTER YOUR PASSWORD! 
 
