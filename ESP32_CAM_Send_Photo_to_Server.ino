@@ -18,18 +18,16 @@
 #define VSYNC_GPIO_NUM 25
 #define HREF_GPIO_NUM 23
 #define PCLK_GPIO_NUM 22
-#define LED Flash PIN (GPIO 4)
 #define FLASH_LED_PIN 4
-#define echoPin 15
-#define trigPin 14
-#define ledPin 13
+#define LIGHT 13 //sensor
+#define led 15   // led
 long duration;
 int distance;
 const char* ssid = "*******";
-const char* password = "*******";
+const char* password = "******";
 unsigned long previousMillis = 0;
 const int Interval = 20000;
-String serverName = "192.168.***";
+String serverName = "192.168.2.102323321";
 String serverPath = "/ESP32CAM/upload_img.php";
 const int serverPort = 80;
 bool LED_Flash_ON = true;
@@ -40,11 +38,7 @@ void sendPhotoToServer() {
   Serial.println();
   Serial.println("-----------");
   Serial.println("Taking a photo...");
-  if (LED_Flash_ON == true) {
-    digitalWrite(FLASH_LED_PIN, HIGH);//high
-    delay(1000);
-  }
- for (int i = 0; i <= 3; i++) {
+  for (int i = 0; i <= 3; i++) {
     camera_fb_t* fb = NULL;
     fb = esp_camera_fb_get();
     if (!fb) {
@@ -66,7 +60,6 @@ void sendPhotoToServer() {
     ESP.restart();
     return;
   }
-  if (LED_Flash_ON == true) digitalWrite(FLASH_LED_PIN, LOW);
   Serial.println("Taking a photo was successful.");
   Serial.println("Connecting to server: " + serverName);
   if (client.connect(serverName.c_str(), serverPort)) {
@@ -128,25 +121,18 @@ void sendPhotoToServer() {
   }
 }
 void setup() {
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
-  pinMode(ledPin, OUTPUT);
+  pinMode(LIGHT, INPUT_PULLUP);// define pin as Input  sensor
+  pinMode(led, OUTPUT);// define pin as OUTPUT for led
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
   Serial.begin(115200);
   Serial.println();
   pinMode(FLASH_LED_PIN, OUTPUT);
   WiFi.mode(WIFI_STA);
   Serial.println();
-
-  //---------------------------------------- The process of connecting ESP32 CAM with WiFi Hotspot / WiFi Router.
   Serial.println();
   Serial.print("Connecting to : ");
   Serial.println(ssid);
   WiFi.begin(ssid, password);
-
-  // The process timeout of connecting ESP32 CAM with WiFi Hotspot / WiFi Router is 20 seconds.
-  // If within 20 seconds the ESP32 CAM has not been successfully connected to WiFi, the ESP32 CAM will restart.
-  // I made this condition because on my ESP32-CAM, there are times when it seems like it can't connect to WiFi, so it needs to be restarted to be able to connect to WiFi.
   int connecting_process_timed_out = 20;  //--> 20 = 20 seconds.
   connecting_process_timed_out = connecting_process_timed_out * 2;
   while (WiFi.status() != WL_CONNECTED) {
@@ -165,7 +151,7 @@ void setup() {
   Serial.println();
   Serial.print("Successfully connected to ");
   Serial.println(ssid);
-  Serial.println();
+   Serial.println();
   Serial.print("Set the camera ESP32 CAM...");
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
@@ -190,11 +176,11 @@ void setup() {
   config.pixel_format = PIXFORMAT_JPEG;
   if (psramFound()) {
     config.frame_size = FRAMESIZE_UXGA;
-    config.jpeg_quality = 10;
+    config.jpeg_quality = 10;  
     config.fb_count = 2;
   } else {
     config.frame_size = FRAMESIZE_SVGA;
-    config.jpeg_quality = 8;
+    config.jpeg_quality = 8;  
     config.fb_count = 1;
   }
   esp_err_t err = esp_camera_init(&config);
@@ -202,36 +188,26 @@ void setup() {
     Serial.printf("Camera init failed with error 0x%x", err);
     Serial.println();
     Serial.println("Restarting the ESP32 CAM.");
-    delay(1000);
+    delay(500);
     ESP.restart();
   }
   sensor_t* s = esp_camera_sensor_get();
-
-  s->set_framesize(s, FRAMESIZE_SXGA);  //--> UXGA|SXGA|XGA|SVGA|VGA|CIF|QVGA|HQVGA|QQVGA
-
+  s->set_framesize(s, FRAMESIZE_SXGA);
   Serial.println();
   Serial.println("Set camera ESP32 CAM successfully.");
-  //----------------------------------------
-
   Serial.println();
   Serial.print("ESP32-CAM captures and sends photos to the server every 20 seconds.");
 }
 void loop() {
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-  duration = pulseIn(echoPin, HIGH);
-  distance = duration * 0.034 / 2;
-  if (distance <= 10) {
-    digitalWrite(ledPin, HIGH);
+  int L =digitalRead(LIGHT);// read the sensor  
+      if(L == 1){
+    Serial.println(" light is ON");
+    digitalWrite(led,HIGH);// turn the led ON
     sendPhotoToServer();
-  } else {
-    digitalWrite(ledPin, LOW);
+  }else{
+     Serial.println("  === light is OFF");
+     digitalWrite(led,LOW);
   }
-  Serial.print("Distance: ");
-  Serial.print(distance);
-  Serial.println("");
   delay(100);
+
 }
